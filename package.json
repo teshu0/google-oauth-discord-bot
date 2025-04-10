@@ -1,0 +1,23 @@
+{
+	"name": "google-auth-bot",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"types": "wrangler types",
+		"register": "bun --env-file=.env.local src/register.ts"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@cloudflare/workers-types": "^4.20250410.0",
+		"@types/bun": "^1.2.9",
+		"discord-api-types": "^0.37.119",
+		"typescript": "^5.8.3",
+		"wrangler": "4"
+	},
+	"dependencies": {
+		"discord-hono": "^0.16.4",
+		"hono": "^4.7.6"
+	}
+}

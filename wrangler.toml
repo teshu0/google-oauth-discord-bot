@@ -1,0 +1,12 @@
+name = "google-auth-bot"
+main = "src/index.ts"
+compatibility_date = "2025-04-10"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "KV"
+id = "<your-kv-id-here>"
+
+
+[observability]
+enabled = true
