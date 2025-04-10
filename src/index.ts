@@ -1,19 +1,26 @@
+import type { APIInteractionResponseCallbackData } from "discord-api-types/v10";
 import {
 	_channels_$_messages,
 	_guilds_$_members_$_roles_$,
 	_users_me_channels,
 	createRest,
 	DiscordHono,
-	Embed,
 } from "discord-hono";
 import { Hono } from "hono";
+import {
+	alreadyAuthorizedEmbed,
+	authorizationSuccessEmbed,
+	availableHereEmbed,
+	notAuthorizedEmbed,
+	openloginPageEmbed,
+	unavailableHereEmbed,
+} from "./embed";
 import {
 	createUserRequest,
 	createUserState,
 	deleteUserRequest,
 	getUserRequest,
 	getUserState,
-	isAuthenticated,
 	isExpired,
 } from "./kv";
 
@@ -46,40 +53,61 @@ const grantRole = async (env: Bindings, userId: string) => {
 const sendDM = async (
 	env: Bindings,
 	userId: string,
-	content: string,
+	data: APIInteractionResponseCallbackData,
 ): Promise<void> => {
-	await createRest(env.DISCORD_TOKEN)(
+	const channel = await createRest(env.DISCORD_TOKEN)(
 		"POST",
 		_users_me_channels,
 		[],
 		{
 			recipient_id: userId,
-			content,
 		},
+	);
+
+	const channelId = (await channel.json()).id;
+	await createRest(env.DISCORD_TOKEN)(
+		"POST",
+		_channels_$_messages,
+		[
+			channelId,
+		],
+		data,
 	);
 };
 
 discord
-	.command("signin", async (c) => {
+	.command("login", async (c) => {
 		const interaction = c.interaction;
 		const userId = interaction.user?.id;
+		const memberId = interaction.member?.user.id;
 		if (!userId) {
-			return c.ephemeral().res(
-				"You can't use this command in the Guild! Please use DM.",
-			);
+			if (memberId) {
+				await sendDM(
+					c.env,
+					memberId,
+					{
+						embeds: [
+							availableHereEmbed("/login"),
+						],
+					},
+				);
+			}
+
+			return c.ephemeral().res({
+				embeds: [
+					unavailableHereEmbed,
+				],
+			});
 		}
 
 		const userState = await getUserState(c.env.KV, userId);
 		if (userState) {
-			if (isAuthenticated(userState)) {
-				await sendDM(
-					c.env,
-					userId,
-					"You are already authenticated.",
-				);
-				await grantRole(c.env, userId);
-				return c.res("You are already authenticated.");
-			}
+			await grantRole(c.env, userId);
+			return c.res({
+				embeds: [
+					alreadyAuthorizedEmbed,
+				],
+			});
 		}
 
 		// send authentication request
@@ -90,17 +118,12 @@ discord
 		);
 		const origin = new URL(c.req.url).origin;
 
-		const url = `${origin}/signin?requestId=${requestId}`;
+		const url = `${origin}/login?requestId=${requestId}`;
 
 		return c.res(
 			{
 				embeds: [
-					new Embed().title("認証リンク").description(url).url(url)
-						.footer(
-							{
-								text: "リンクは10分間有効です。",
-							},
-						),
+					openloginPageEmbed(url),
 				],
 			},
 		);
@@ -108,19 +131,42 @@ discord
 	.command("status", async (c) => {
 		const interaction = c.interaction;
 		const userId = interaction.user?.id;
+		const memberId = interaction.member?.user.id;
 		if (!userId) {
+			if (memberId) {
+				await sendDM(
+					c.env,
+					memberId,
+					{
+						embeds: [
+							availableHereEmbed("/status"),
+						],
+					},
+				);
+			}
 			return c.ephemeral().res(
-				"You can't use this command in the Guild! Please use DM.",
+				{
+					embeds: [
+						unavailableHereEmbed,
+					],
+				},
 			);
 		}
+
 		const userState = await getUserState(c.env.KV, userId);
 		if (!userState) {
-			return c.res("You are not authenticated.");
+			return c.res({
+				embeds: [
+					notAuthorizedEmbed,
+				],
+			});
 		}
-		if (isAuthenticated(userState)) {
-			return c.res("You are authenticated.");
-		}
-		return c.res("You are not authenticated.");
+
+		return c.res({
+			embeds: [
+				alreadyAuthorizedEmbed,
+			],
+		});
 	})
 	.command("ping", async (c) => {
 		return c.res("pong");
@@ -128,12 +174,11 @@ discord
 
 const hono = new Hono<Env>();
 
-hono.get("/signin", (c) => {
+hono.get("/login", (c) => {
 	const requestId = c.req.query("requestId");
 	if (!requestId) {
 		return c.text("requestId is required", 400);
 	}
-	console.log(c.env);
 	if (c.env.REDIRECT_URI === "" || c.env.REDIRECT_URI === undefined) {
 		return c.text("REDIRECT_URI is not set", 500);
 	}
@@ -200,12 +245,16 @@ hono.get("/auth/callback", async (c) => {
 	await sendDM(
 		c.env,
 		userRequest.userId,
-		"Authentication successful! You have been granted the role.",
+		{
+			embeds: [
+				authorizationSuccessEmbed,
+			],
+		},
 	);
 
 	console.log(`User ${userRequest.userId} authenticated successfully.`);
 
-	return c.text("Authentication successful! You can close this window.");
+	return c.text("認証成功しました！ ブラウザのタブを閉じることができます。");
 });
 
 hono.mount("/bot", discord.fetch);

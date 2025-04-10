@@ -36,7 +36,9 @@ export const getUserRequest = async (
 	kv: KVNamespace,
 	requestId: string,
 ): Promise<UserRequest | null> => {
-	const userRequest = await kv.get(requestId);
+	const userRequest = await kv.get(requestId, {
+		cacheTtl: 60,
+	});
 	if (!userRequest) return null;
 	return JSON.parse(userRequest) as UserRequest;
 };
@@ -70,7 +72,9 @@ export const getUserState = async (
 	kv: KVNamespace,
 	userId: string,
 ): Promise<UserState | null> => {
-	const userState = await kv.get(userId);
+	const userState = await kv.get(userId, {
+		cacheTtl: 60,
+	});
 	if (!userState) return null;
 	return JSON.parse(userState) as UserState;
 };
@@ -80,8 +84,4 @@ export const deleteUserState = async (
 	userId: string,
 ): Promise<void> => {
 	await kv.delete(userId);
-};
-
-export const isAuthenticated = (userState: UserState): boolean => {
-	return userState.authenticated;
 };
