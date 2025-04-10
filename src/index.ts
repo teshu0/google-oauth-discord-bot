@@ -27,7 +27,6 @@ import {
 type Bindings = {
 	KV: KVNamespace<string>;
 	REDIRECT_URI: string;
-	AUTH_SECRET: string;
 	GOOGLE_ID: string;
 	GOOGLE_SECRET: string;
 	//

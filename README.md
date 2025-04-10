@@ -35,7 +35,6 @@
         *   `GOOGLE_ID`: Google OAuth クライアント ID。
         *   `GOOGLE_SECRET`: Google OAuth クライアントシークレット。
         *   `REDIRECT_URI`: Google OAuth のコールバック URL (例: `https://<your-worker-url>/auth/callback` またはローカル開発用の `http://localhost:8787/auth/callback`)。
-        *   `AUTH_SECRET`: 将来の使用のためのシークレット文字列 (現在は未使用)。
         *   `DISCORD_APPLICATION_ID`: Discord アプリケーション ID。
         *   `DISCORD_PUBLIC_KEY`: Discord アプリケーション公開鍵。
         *   `DISCORD_TOKEN`: Discord ボットトークン。
