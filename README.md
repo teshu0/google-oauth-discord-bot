@@ -1,5 +1,17 @@
 ## Google OAuth & Discord BOT ロール付与
 
+## 使用したもの
+
+- Hono: https://hono.dev/
+  - シンプルで軽量なサーバー
+- Discord Hono: https://discord-hono.luis.fun/ja/
+  - 今回の主役。Cloudflare Workers 上で Discord Bot の動作を可能にしており
+  - かつ Hono と組み合わせることが可能なことから、一つのプロジェクトで認証と Bot を同時に運用可能。ベストマッチ。
+- Cloudflare Workers & KV
+  - 無料で運用可能であり、サーバーエンドポイントに加えて、KV で認証のためのデータ保持をお手軽に実現。神。
+
+以下 は Gemini 2.5 Pro が書いたので正しいかはわからんです。
+
 このプロジェクトは、Cloudflare Workers 上で動作する Discord ボットを実装します。このボットは、Google OAuth を介してユーザーを認証し、認証成功時に Discord サーバー上の特定のロールを付与します。認証状態の管理には Cloudflare KV を利用します。
 
 ### 機能
@@ -87,3 +99,5 @@
 9.  ボットは設定された Discord ロールをユーザーに付与します ([`grantRole`](src/index.ts))。
 10. ボットは確認の DM をユーザーに送信します ([`sendDM`](src/index.ts))。
 11. ユーザーはブラウザでも成功メッセージを確認できます。
+
+
